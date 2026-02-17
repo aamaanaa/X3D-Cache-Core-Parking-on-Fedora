@@ -1,4 +1,4 @@
-# X3D core parking in linux
+# X3D core parking / driver in linux
 
 > [!WARNING]
 > Written and tested only on Fedora 43
@@ -6,9 +6,9 @@
 ---
 
 <img width="599" height="428" alt="Screenshot From 2026-02-17 22-20-26" src="https://github.com/user-attachments/assets/05c1a20e-361a-4352-95fd-a5bc38f430dd" style="text-align:center;" />
-
-
 *in the above picture, we run a steam game, and only the X3D cores are active for best performance and latency*
+
+Do not be like me and waste gaming performance for over a year not knowing all of this in the guide exists... This setup should have been made semi default, the regular linux user has no idea that this is not even enabled.
 
 ---
 
