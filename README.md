@@ -20,6 +20,8 @@
 - [ ] add more pictures (also from the bios option)
 - [ ] add game mode test commands to see if it is working properly
 
+## Doesn't Linux already do this out of the box ?
+Nope. By default, the scheduler uses both CCDs the normal one and the X3D (V-Cache) one which increases latency and can sometimes reduce performance. On some distros, like Fedora, the AMD X3D mode driver isn’t even enabled by default, so the CPU doesn’t automatically switch between cache and frequency modes, and gamemode is not even configured to enable “cache” mode when a game starts.... In some games, I’m noticing better 1% lows and, most importantly, much smoother gameplay. without the overhead of the non-X3D CCD constantly turning on and boosting. 
 
 ### Enable CPPC in bios
 
