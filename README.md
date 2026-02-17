@@ -1,5 +1,8 @@
 # X3D core parking in linux
 
+> [!WARNING]
+> Written and tested only on Fedora 43
+
 ---
 
 <img width="599" height="428" alt="Screenshot From 2026-02-17 22-20-26" src="https://github.com/user-attachments/assets/05c1a20e-361a-4352-95fd-a5bc38f430dd" style="text-align:center;" />
