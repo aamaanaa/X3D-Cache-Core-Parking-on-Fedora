@@ -83,9 +83,17 @@ amd_x3d_mode_desired=cache
 amd_x3d_mode_default=frequency
 ```
 
-**0-7,16-23** threads must be pinned to threads 0-7 and 16-23 on a AMD 9 9950x3D cpu. This is to prevent latency due the 2 ccd's talking to each other.
+**FOR AMD 9 9950X3D
 
-See also: https://github.com/FeralInteractive/gamemode/issues/556
+output of `lstopo --no-io`
+
+<img width="3218" height="1899" alt="image" src="https://github.com/user-attachments/assets/82520c7d-74be-4fc4-bf54-24ed9c464723" />
+
+the 9950x3d has 2 chiplests with diffrent specs, it is widely agreed upon that games should be ran on the ccd with extra cache which are threads 0-7 and 16-23. having a game run across both chipsets makes games lose prefroamnce due to a latency increase from the 2 ccds having to talk to eacher,
+
+
+**0-7,16-23** threads must be pinned to threads 0-7 and 16-23 on a AMD 9 9950x3D cpu.
+
 
 
 You may also use this command to check if it is working, the x3d cores should have a higher ranking:
