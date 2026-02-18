@@ -22,6 +22,10 @@ Do not be like me and waste gaming performance for over a year not knowing all o
 ## Doesn't Linux already do this out of the box ?
 Nope. By default, the scheduler uses both CCDs the normal one and the X3D (V-Cache) one which increases latency and can sometimes reduce performance. On some distros, like Fedora, the AMD X3D mode driver isn’t even enabled by default, so the CPU doesn’t automatically switch between cache and frequency modes, and gamemode is not even configured to enable “cache” mode when a game starts.... In some games, I’m noticing better 1% lows and, most importantly, much smoother gameplay. without the overhead of the non-X3D CCD constantly turning on and boosting. 
 
+## For Fedora users
+Installing latest Mesa from git might give a FPS boost due to new features, you need to compile mesa from git. See the link for instructions:
+- https://gist.github.com/craimasjien/4519283aa2c170b93aff00b9f75aa7bf (*Credits to craimasjien for his work!*)
+  
 ### Enable CPPC in bios
 
 **YOU NEED to enable something in your bios first:**
