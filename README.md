@@ -126,35 +126,14 @@ amd_x3d_mode_default=frequency  ; Default system mode
 
 * **Threads 0–7 and 16–23** should be pinned to the X3D CCD.
 
+## Verify the changes
 Verify X3D cores have higher ranking:
 
 ```bash
 $ grep -v /sys/devices/system/cpu/cpu*/cpufreq/amd_pstate_prefcore_ranking
 ```
 
-Use `btop` during a game to confirm that the X3D cores are handling the load.
+In game with mangohud you should see the X3D cores been used a lot, and the other non ones barely at all.
 
----
+Use `btop` during a game to confirm that the X3D cores are handling the load, as seen in the above picture.
 
-# Quick Visual Summary: CCDs & C-States for AMD Ryzen 9 9950X3D
-
-Ryzen 9 9950X3D Overview
-─────────────────────────
-X3D CCD (0-7,16-23)       Non-X3D CCD
-  ┌───────────────┐        ┌───────────────┐
-  │ Game Workload │        │ System Tasks │
-  │ 3D V-Cache    │        │ Smaller L3    │
-  │ Preferred     │        │ Higher Clocks │
-  └───────────────┘        └───────────────┘
-
-C-States Enabled (Default)
-─────────────────────────
-Non-X3D cores → may enter deep sleep (C6)
-Wake-up latency → small scheduling delays / frame stutters
-
-C-States Disabled (Recommended for Gaming)
-─────────────────────────
-Non-X3D cores → stay active
-Immediate execution for system tasks
-Lower latency, smoother gaming
-Higher idle power consumption
