@@ -1,116 +1,160 @@
-# X3D core parking / driver in linux
+# X3D Core Parking / Driver in Linux
 
-> [!WARNING]
-> Written and tested only on Fedora 43
+> ⚠️ Written and tested only on Fedora 43
 
 ---
 
 <img width="599" height="428" alt="Screenshot From 2026-02-17 22-20-26" src="https://github.com/user-attachments/assets/05c1a20e-361a-4352-95fd-a5bc38f430dd" style="text-align:center;" />
 
-Do not be like me and waste gaming performance for over a year not knowing all of this in the guide exists... This setup should have been made semi default, the regular linux user has no idea that this is not even enabled.
+> Don’t waste gaming performance like I did — this setup should be semi-default. Most Linux users are unaware that it isn’t enabled by default.
 
 ---
 
 ## TODO
-- [ ] instructions of how to compile game mode from git as it currenly lacks the x3d feature
-- [ ] refactoring
-- [ ] other stuff
-- [ ] table of what cores to pin for what x3d cpu
-- [ ] add more pictures (also from the bios option)
-- [ ] add game mode test commands to see if it is working properly
 
-## Doesn't Linux already do this out of the box ?
-Nope. By default, the scheduler uses both CCDs the normal one and the X3D (V-Cache) one which increases latency and can sometimes reduce performance. On some distros, like Fedora, the AMD X3D mode driver isn’t even enabled by default, so the CPU doesn’t automatically switch between cache and frequency modes, and gamemode is not even configured to enable “cache” mode when a game starts.... In some games, I’m noticing better 1% lows and, most importantly, much smoother gameplay. without the overhead of the non-X3D CCD constantly turning on and boosting. 
+* [ ] Instructions for compiling GameMode from Git (current release lacks X3D features)
+* [ ] Refactoring and cleanup
+* [ ] Add more screenshots (including BIOS options)
+* [ ] Add GameMode test commands to verify functionality
 
-## For Fedora users
-Installing latest Mesa from git might give a FPS boost due to new features, you need to compile mesa from git. See the link for instructions:
-- https://gist.github.com/craimasjien/4519283aa2c170b93aff00b9f75aa7bf (*Credits to craimasjien for his work!*)
-  
-### Enable CPPC in bios
+---
 
-**YOU NEED to enable something in your bios first:**
-in the BIOS under the CPPC Option to the “Driver” Option. This will allow to override with the sysfs the used mode.
+## Doesn’t Linux already do this out of the box?
 
+Nope. By default:
 
-### Enabling the driver
-See this what the current vallue is
+* The scheduler uses both CCDs (X3D and non-X3D), which can increase latency and reduce performance.
+* On Fedora, the AMD X3D mode driver may not even be enabled, so the CPU does **not** automatically switch between cache and frequency modes.
+* GameMode is also not configured to enable “cache” mode automatically.
+
+Result: some games show better 1% lows and much smoother gameplay when the non-X3D CCD isn’t boosting or waking unnecessarily.
+
+---
+
+## For Fedora Users
+
+Installing the latest Mesa from Git may boost FPS due to new features, as Mesa 26 has not landed yet on major distrubutions:
+[https://gist.github.com/craimasjien/4519283aa2c170b93aff00b9f75aa7bf](https://gist.github.com/craimasjien/4519283aa2c170b93aff00b9f75aa7bf)
+(*Thanks to craimasjien for the build script*)
+
+---
+
+## Required BIOS Settings
+
+### Enable CPPC
+
+Enable **CPPC** in BIOS under the “Driver” option. This allows sysfs to override the CPU mode.
+
+### Disable C-States
+
+Disabling C-states keeps non-X3D cores active instead of entering deep sleep.
+This reduces wake-up latency when the scheduler uses those cores, helping minimize frame stutters and improve gaming latency on the X3D CCD.
+
+---
+
+## Enabling the `amd_x3d_vcache` Driver
+
+Check the current mode:
 
 ```bash
 $ cat /sys/bus/platform/drivers/amd_x3d_vcache/AMDI0101:00/amd_x3d_mode
-frequency # or cache!
+frequency  # or cache
 ```
 
-it may not have been installed in the kernel or even be loaded if it is installed...
+Check if the kernel has the driver installed:
 
 ```bash
 $ grep AMD_3D_VCACHE /boot/config-$(uname -r)
 CONFIG_AMD_3D_VCACHE=m
 ```
 
-**m** = installed, but as a kernel module and thus not loaded
+* **m** = installed as a kernel module (not loaded)
 
-So, we need to load the kernel module:
+Load the module if needed:
 
 ```bash
 $ sudo modprobe amd_3d_vcache
 ```
 
-To manually prefer the X3D cache:
+Manually prefer the X3D cache:
 
 ```bash
 $ echo cache | sudo tee /sys/bus/platform/drivers/amd_x3d_vcache/AMDI0101:00/amd_x3d_mode
 ```
 
-## automating with feral gamemode 
+---
 
-alter the config 
+## Automating with Feral GameMode
 
-> **NOTE** you may have to compile gamemode from git!
+Modify the GameMode config (may require compiling from Git):
 
-```
+```ini
 [cpu]
-; Parking or Pinning can be enabled with either "yes", "true" or "1" and disabled with "no", "false" or "0".
-; Either can also be set to a specific list of cores to park or pin, comma separated list where "-" denotes
-; a range. E.g "park_cores=1,8-15" would park cores 1 and 8 to 15.
-; The default is uncommented is to disable parking but enable pinning. If either is enabled the code will
-; currently only properly autodetect Ryzen 7900x3d, 7950x3d and Intel CPU:s with E- and P-cores.
-; For Core Parking, user must be added to the gamemode group (not required for Core Pinning):
-; sudo usermod -aG gamemode $(whoami)
-; AMD 9 9950X3D cache is on the cores 0 - 7
-; park_cores=
+; Pinning/parking can be enabled with "yes", "true", or "1". Disabled with "no", "false", or "0".
+; Core ranges can be specified with comma-separated lists or ranges. E.g. "park_cores=1,8-15"
+; Default: disable parking, enable pinning.
+
+; AMD 9 9950X3D cache cores
 pin_cores=0-7,16-23
 
-; AMD 3D V-Cache Performance Optimizer Driver settings
-; These options control the cache mode for dual CCD X3D CPUs (7950x3d, 9950x3d, etc.)
-; "frequency" mode prioritizes higher boost clocks, "cache" mode prioritizes 3D V-Cache performance
-; Allows for dynamically shifting other processes onto a different CCD. E.g. amd_x3d_mode_default=cache may be
-; preferred for some normal, non-game workloads that are better optimized for cache, but
-; amd_x3d_mode_desired=frequency can shift everything but the game process to frequency CCD while GameMode is
-; running, in conjunction with core pinning.
-; Only works on systems with the AMD X3D mode driver (automatically detected)
-; The desired mode is set when entering gamemode, default mode is restored when leaving
-; frequency = default non gaming mode
-amd_x3d_mode_desired=cache
-amd_x3d_mode_default=frequency
+; X3D cache mode configuration
+amd_x3d_mode_desired=cache      ; GameMode sets this when gaming
+amd_x3d_mode_default=frequency  ; Default system mode
 ```
 
-**FOR AMD 9 9950X3D
+**Notes:**
 
-output of `lstopo --no-io`
+* Only works on CPUs with the AMD X3D driver (automatically detected).
+* GameMode will switch the CPU to `cache` mode while gaming and restore `frequency` mode afterward.
+* Threads 0–7 and 16–23 correspond to the X3D CCD on a Ryzen 9 9950X3D.
+
+---
+
+## Example: AMD Ryzen 9 9950X3D CCD Layout
+
+`lstopo --no-io` output:
 
 <img width="3218" height="1899" alt="image" src="https://github.com/user-attachments/assets/82520c7d-74be-4fc4-bf54-24ed9c464723" />
 
-the 9950x3d has 2 chiplests with diffrent specs, it is widely agreed upon that games should be ran on the ccd with extra cache which are threads 0-7 and 16-23. having a game run across both chipsets makes games lose prefroamnce due to a latency increase from the 2 ccds having to talk to eacher,
+**Key points:**
 
+* 2 chiplets with different specifications.
+* Games should run on the CCD with extra cache (threads 0–7 and 16–23).
+* Running across both CCDs introduces latency due to cross-CCD communication.
 
-**0-7,16-23** threads must be pinned to threads 0-7 and 16-23 on a AMD 9 9950x3D cpu.
+**Pinning recommendation:**
 
+* **Threads 0–7 and 16–23** should be pinned to the X3D CCD.
 
-
-You may also use this command to check if it is working, the x3d cores should have a higher ranking:
+Verify X3D cores have higher ranking:
 
 ```bash
 $ grep -v /sys/devices/system/cpu/cpu*/cpufreq/amd_pstate_prefcore_ranking
 ```
 
-if it all went well, during a game and using the `btop` command, you should see the result in the picture above in this repo.
+Use `btop` during a game to confirm that the X3D cores are handling the load.
+
+---
+
+# Quick Visual Summary: CCDs & C-States for AMD Ryzen 9 9950X3D
+
+Ryzen 9 9950X3D Overview
+─────────────────────────
+X3D CCD (0-7,16-23)       Non-X3D CCD
+  ┌───────────────┐        ┌───────────────┐
+  │ Game Workload │        │ System Tasks │
+  │ 3D V-Cache    │        │ Smaller L3    │
+  │ Preferred     │        │ Higher Clocks │
+  └───────────────┘        └───────────────┘
+
+C-States Enabled (Default)
+─────────────────────────
+Non-X3D cores → may enter deep sleep (C6)
+Wake-up latency → small scheduling delays / frame stutters
+
+C-States Disabled (Recommended for Gaming)
+─────────────────────────
+Non-X3D cores → stay active
+Immediate execution for system tasks
+Lower latency, smoother gaming
+Higher idle power consumption
